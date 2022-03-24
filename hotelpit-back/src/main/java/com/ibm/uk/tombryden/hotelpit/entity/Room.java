@@ -1,5 +1,8 @@
 package com.ibm.uk.tombryden.hotelpit.entity;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,12 +14,16 @@ import javax.validation.constraints.Size;
 @Entity
 public class Room {
 	
-	public Room(long id, @NotNull @Size(max = 30) String name, @NotNull String description, @NotNull int quantity) {
+	protected Room() {
+		
+	}
+	
+	public Room(long id, @NotNull @Size(max = 30) String name, @NotNull String description, @NotNull float basePrice) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.description = description;
-		this.quantity = quantity;
+		this.basePrice = basePrice;
 	}
 
 	@Id
@@ -32,7 +39,7 @@ public class Room {
 	private String description;
 	
 	@NotNull
-	private int quantity;
+	private float basePrice;
 
 	public long getId() {
 		return id;
@@ -58,12 +65,16 @@ public class Room {
 		this.description = description;
 	}
 
-	public int getQuantity() {
-		return quantity;
+	public String getBasePrice() {
+		BigDecimal bd = new BigDecimal(basePrice);
+		
+		bd = bd.setScale(2, RoundingMode.HALF_UP);
+		
+		return bd.toString();
 	}
 
-	public void setQuantity(int quantity) {
-		this.quantity = quantity;
+	public void setBasePrice(float basePrice) {
+		this.basePrice = basePrice;
 	}
 
 }
