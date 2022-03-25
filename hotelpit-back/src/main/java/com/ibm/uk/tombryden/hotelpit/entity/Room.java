@@ -18,12 +18,14 @@ public class Room {
 		
 	}
 	
-	public Room(long id, @NotNull @Size(max = 30) String name, @NotNull String description, @NotNull float basePrice) {
+	public Room(long id, @NotNull @Size(max = 30) String name, @NotNull String description, @NotNull float basePrice, int singleBeds, int doubleBeds) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.description = description;
 		this.basePrice = basePrice;
+		this.singleBeds = singleBeds;
+		this.doubleBeds = doubleBeds;
 	}
 
 	@Id
@@ -40,6 +42,10 @@ public class Room {
 	
 	@NotNull
 	private float basePrice;
+	
+	private int singleBeds;
+	
+	private int doubleBeds;
 
 	public long getId() {
 		return id;
@@ -75,6 +81,22 @@ public class Room {
 
 	public void setBasePrice(float basePrice) {
 		this.basePrice = basePrice;
+	}
+
+	public int getSingleBeds() {
+		return singleBeds;
+	}
+
+	public void setSingleBeds(int singleBeds) {
+		this.singleBeds = singleBeds;
+	}
+
+	public int getDoubleBeds() {
+		return doubleBeds;
+	}
+
+	public void setDoubleBeds(int doubleBeds) {
+		this.doubleBeds = doubleBeds;
 	}
 
 }
