@@ -8,7 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 public class User {
@@ -30,6 +30,8 @@ public class User {
 	
 	private String username;
 	
+	// only allow write access (setting from requests) but no read access
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String password;
 	
 	@OneToMany(mappedBy = "user")
@@ -51,7 +53,6 @@ public class User {
 		this.username = username;
 	}
 
-	@JsonIgnore
 	public String getPassword() {
 		return password;
 	}
