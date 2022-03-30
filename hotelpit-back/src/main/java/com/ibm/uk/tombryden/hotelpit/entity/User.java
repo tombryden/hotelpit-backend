@@ -1,9 +1,12 @@
 package com.ibm.uk.tombryden.hotelpit.entity;
 
+import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 @Entity
 public class User {
@@ -26,6 +29,9 @@ public class User {
 	private String username;
 	
 	private String password;
+	
+	@OneToMany(mappedBy = "user")
+	private Set<Booking> bookings;
 
 	public long getId() {
 		return id;

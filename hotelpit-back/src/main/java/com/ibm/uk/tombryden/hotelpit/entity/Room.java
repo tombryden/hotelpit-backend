@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -58,6 +59,9 @@ public class Room {
 			inverseJoinColumns = { @JoinColumn(name="rate_id") }
 			)
 	private Set<Rate> rates;
+	
+	@OneToMany(mappedBy = "room")
+	private Set<Booking> bookings;
 
 	public long getId() {
 		return id;
@@ -109,6 +113,12 @@ public class Room {
 
 	public void setDoubleBeds(int doubleBeds) {
 		this.doubleBeds = doubleBeds;
+	}
+	
+	// max guests calculated: 2 * double beds (as 2x people can sleep in a double bed) + single beds
+	// if in production this can be modified based on user preference (maybe prefer to not share double bed)
+	public int getMaxGuests() {
+		return (this.doubleBeds * 2) + this.singleBeds;
 	}
 
 }
