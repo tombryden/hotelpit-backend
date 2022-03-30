@@ -21,6 +21,7 @@ import com.ibm.uk.tombryden.hotelpit.repository.RoomRepository;
 import com.ibm.uk.tombryden.hotelpit.repository.UserRepository;
 import com.ibm.uk.tombryden.hotelpit.security.AuthenticatedUser;
 import com.ibm.uk.tombryden.hotelpit.util.DateUtil;
+import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -39,24 +40,24 @@ public class BookingController {
 	@PostMapping("/pay")
 	public ResponseEntity<Object> payAndCreateBooking(@Valid @RequestBody PaymentDTO paymentDTO) {
 		// if card doesnt start with 4242 decline card number
-		if(!paymentDTO.getCardNumber().startsWith("4242")) return ResponseEntity.status(400).body("Payment rejected");
+		if(!paymentDTO.getCardNumber().startsWith("4242")) return ResponseEntity.status(400).body(new TextResponse("Payment rejected"));
 		
 		// if card month doesnt equal 01 decline
-		if(!paymentDTO.getExpMonth().equals("01")) return ResponseEntity.status(400).body("Payment rejected");
+		if(!paymentDTO.getExpMonth().equals("01")) return ResponseEntity.status(400).body(new TextResponse("Payment rejected"));
 		
 		// if card year doesnt equal 22 decline
-		if(!paymentDTO.getExpYear().equals("22")) return ResponseEntity.status(400).body("Payment rejected");
+		if(!paymentDTO.getExpYear().equals("22")) return ResponseEntity.status(400).body(new TextResponse("Payment rejected"));
 		
 		
 		// get user from authenciated user (can never return nothing here since user has to be authenticated to access endpoint)
 		AuthenticatedUser authUser = new AuthenticatedUser();
 		
 		Optional<User> user = userRepository.findById(authUser.getUser().getId());
-		if(user.isEmpty()) return ResponseEntity.status(500).body("User not found");
+		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
 		
 		// get room from reqeust
 		Optional<Room> room = roomRepository.findById(paymentDTO.getRoomID());
-		if(room.isEmpty()) return ResponseEntity.status(400).body("Room could not be found");
+		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Room not found"));
 		
 		//create booking
 		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(paymentDTO.getCheckInDate()), DateUtil.convertURLToDate(paymentDTO.getCheckOutDate()));
