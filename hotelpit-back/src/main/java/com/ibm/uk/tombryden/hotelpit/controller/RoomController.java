@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ibm.uk.tombryden.hotelpit.entity.Room;
 import com.ibm.uk.tombryden.hotelpit.repository.RoomRepository;
 import com.ibm.uk.tombryden.hotelpit.util.DateUtil;
+import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -59,11 +61,24 @@ public class RoomController {
 	
 	// MAPPINGS
 	@GetMapping
-	public Set<Room> roomSearch(@RequestParam String checkin, @RequestParam String checkout, @RequestParam int guests) {
-		LocalDate checkIn = DateUtil.convertURLToDate(checkin);
-		LocalDate checkOut = DateUtil.convertURLToDate(checkout);
+	public ResponseEntity<Object> roomSearch(@RequestParam String checkin, @RequestParam String checkout, @RequestParam int guests) {
 		
-		return getAvailableRoomsBetweenDates(checkIn, checkOut, guests);
+		// parse string date sent in params - try catch to give 400 status instead of 500
+		LocalDate checkIn;
+		try {
+			checkIn = DateUtil.convertURLToDate(checkin);
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(new TextResponse("Failed to parse check in date '" + checkin + "'. Format must be yyyyMMdd"));
+		}
+		
+		LocalDate checkOut;
+		try {
+			checkOut = DateUtil.convertURLToDate(checkout);
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(new TextResponse("Failed to parse check out date '" + checkout + "'. Format must be yyyyMMdd"));
+		}
+		
+		return ResponseEntity.ok(getAvailableRoomsBetweenDates(checkIn, checkOut, guests));
 	}
 
 }
