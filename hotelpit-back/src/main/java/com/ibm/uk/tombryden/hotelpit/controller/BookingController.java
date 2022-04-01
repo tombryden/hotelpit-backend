@@ -49,7 +49,7 @@ public class BookingController {
 		if(!paymentDTO.getExpYear().equals("22")) return ResponseEntity.status(400).body(new TextResponse("Payment rejected"));
 		
 		
-		// get user from authenciated user (can never return nothing here since user has to be authenticated to access endpoint)
+		// get user from authenciated user
 		AuthenticatedUser authUser = new AuthenticatedUser();
 		
 		Optional<User> user = userRepository.findById(authUser.getUser().getId());
