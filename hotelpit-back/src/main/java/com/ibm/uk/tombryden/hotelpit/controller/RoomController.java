@@ -1,5 +1,6 @@
 package com.ibm.uk.tombryden.hotelpit.controller;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ibm.uk.tombryden.hotelpit.entity.Room;
 import com.ibm.uk.tombryden.hotelpit.repository.RoomRepository;
+import com.ibm.uk.tombryden.hotelpit.util.DateUtil;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -22,10 +24,10 @@ public class RoomController {
 	@Autowired
 	private RoomRepository roomRepository;
 	
-	@GetMapping
-	public Set<Room> getAllRoomsWithGuests(@RequestParam int guests) {
+	// FUNCTIONS - NOT MAPPINGS
+	private Set<Room> getAllRoomsWithGuests(int guests) {
 		// cant make repo query since maxGuests is a transient field (calculated from beds)
-		
+
 		// get all rooms.. find which rooms have the number of guests specified or more
 		List<Room> allRooms = roomRepository.findAll();
 		
@@ -38,6 +40,30 @@ public class RoomController {
 		}
 		
 		return roomsWithGuests;
+	}
+	
+	private Set<Room> getAvailableRoomsBetweenDates(LocalDate checkIn, LocalDate checkOut, int guests) {
+		// get all available rooms with specified number of guests
+		Set<Room> availableRooms = getAllRoomsWithGuests(guests);
+		
+		// loop through rooms.. check if date any bookings for the room within the specified dates
+		Set<Room> roomsBookedBetweenDates = roomRepository.findBookedRoomsBetweenDates(checkIn, checkIn.plusDays(1), checkOut, checkOut.minusDays(1));
+		
+		// remove all booked rooms from available rooms
+		availableRooms.removeAll(roomsBookedBetweenDates);
+		
+		return availableRooms;
+	}
+	
+	
+	
+	// MAPPINGS
+	@GetMapping
+	public Set<Room> roomSearch(@RequestParam String checkin, @RequestParam String checkout, @RequestParam int guests) {
+		LocalDate checkIn = DateUtil.convertURLToDate(checkin);
+		LocalDate checkOut = DateUtil.convertURLToDate(checkout);
+		
+		return getAvailableRoomsBetweenDates(checkIn, checkOut, guests);
 	}
 
 }

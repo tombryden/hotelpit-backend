@@ -16,6 +16,8 @@ import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 public class Room {
 	
@@ -60,6 +62,7 @@ public class Room {
 			)
 	private Set<Rate> rates;
 	
+	@JsonIgnore
 	@OneToMany(mappedBy = "room")
 	private Set<Booking> bookings;
 
@@ -115,6 +118,14 @@ public class Room {
 		this.doubleBeds = doubleBeds;
 	}
 	
+	public Set<Booking> getBookings() {
+		return bookings;
+	}
+
+	public void setBookings(Set<Booking> bookings) {
+		this.bookings = bookings;
+	}
+
 	// max guests calculated: 2 * double beds (as 2x people can sleep in a double bed) + single beds
 	// if in production this can be modified based on user preference (maybe prefer to not share double bed)
 	public int getMaxGuests() {
