@@ -21,7 +21,7 @@ import com.ibm.uk.tombryden.hotelpit.util.DateUtil;
 import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequestMapping("/room")
 public class RoomController {
 	

@@ -13,7 +13,7 @@ import com.ibm.uk.tombryden.hotelpit.entity.Rate;
 import com.ibm.uk.tombryden.hotelpit.repository.RateRepository;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequestMapping("/rate")
 public class RateController {
 	

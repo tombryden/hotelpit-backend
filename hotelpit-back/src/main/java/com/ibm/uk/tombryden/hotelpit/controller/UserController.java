@@ -2,6 +2,7 @@ package com.ibm.uk.tombryden.hotelpit.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,9 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ibm.uk.tombryden.hotelpit.entity.User;
 import com.ibm.uk.tombryden.hotelpit.repository.UserRepository;
+import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequestMapping("/user")
 public class UserController {
 	
@@ -40,7 +42,9 @@ public class UserController {
 	}
 	
 	@PostMapping("/login")
-	public String login(@RequestBody User user) {
+	public ResponseEntity<Object> login(@RequestBody User user) throws InterruptedException {
+		Thread.sleep(5000);
+		
 //		Authentication
 		
 		try
@@ -49,23 +53,23 @@ public class UserController {
 			
 			SecurityContextHolder.getContext().setAuthentication(auth);
 			
-			return "Logged in";
+			return ResponseEntity.ok().body(new TextResponse("Logged in"));
 		} catch(BadCredentialsException ex) {
-			return "Invalid login details";
+			return ResponseEntity.ok().body(new TextResponse("Credentials incorrect"));
 		} catch(Exception ex) {
-			return ex.toString();
+			return ResponseEntity.status(500).build();
 		}
 	}
 	
 	@PostMapping("/logout")
-	public String logout() {
+	public ResponseEntity<Object> logout() {
 		SecurityContextHolder.clearContext();
-		return "Logged out";
+		return ResponseEntity.ok().build();
 	}
 	
 	@GetMapping("/auth")
-	public String authenticated() {
-		return "Hello";
+	public ResponseEntity<Object> authenticated() {
+		return ResponseEntity.ok().build();
 	}
 
 }
