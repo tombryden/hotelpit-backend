@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ibm.uk.tombryden.hotelpit.dto.PaymentDTO;
+import com.ibm.uk.tombryden.hotelpit.dto.ReservationDTO;
 import com.ibm.uk.tombryden.hotelpit.entity.Booking;
+import com.ibm.uk.tombryden.hotelpit.entity.Booking.BookingStatus;
 import com.ibm.uk.tombryden.hotelpit.entity.Room;
 import com.ibm.uk.tombryden.hotelpit.entity.User;
 import com.ibm.uk.tombryden.hotelpit.repository.BookingRepository;
@@ -60,10 +62,27 @@ public class BookingController {
 		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Room not found"));
 		
 		//create booking
-		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(paymentDTO.getCheckInDate()), DateUtil.convertURLToDate(paymentDTO.getCheckOutDate()));
+		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(paymentDTO.getCheckInDate()), DateUtil.convertURLToDate(paymentDTO.getCheckOutDate()), BookingStatus.CONFIRMED);
 		
 		return ResponseEntity.ok(bookingRepository.save(booking));
+	}
+	
+	@PostMapping("/reserve")
+	public ResponseEntity<Object> createReservation(@Valid @RequestBody ReservationDTO reservationDTO) {
+		// get user from authenciated user
+		AuthenticatedUser authUser = new AuthenticatedUser();
 		
+		Optional<User> user = userRepository.findById(authUser.getUser().getId());
+		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
+		
+		// get room from reqeust
+		Optional<Room> room = roomRepository.findById(reservationDTO.getRoomID());
+		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Room not found"));
+		
+		// create booking
+		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(reservationDTO.getCheckInDate()), DateUtil.convertURLToDate(reservationDTO.getCheckOutDate()), BookingStatus.RESERVATION);
+		
+		return ResponseEntity.ok(bookingRepository.save(booking));
 	}
 
 }

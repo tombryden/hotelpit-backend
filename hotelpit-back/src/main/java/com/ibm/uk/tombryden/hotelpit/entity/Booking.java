@@ -1,23 +1,35 @@
 package com.ibm.uk.tombryden.hotelpit.entity;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Entity
 public class Booking {
 	
-	public Booking(User user, Room room, LocalDate checkInDate, LocalDate checkOutDate) {
+	public enum BookingStatus {
+		RESERVATION,
+		CONFIRMED,
+		CANCELLED,
+	}
+	
+	public Booking(User user, Room room, LocalDate checkInDate, LocalDate checkOutDate, BookingStatus status) {
 		super();
 		this.user = user;
 		this.room = room;
 		this.checkInDate = checkInDate;
 		this.checkOutDate = checkOutDate;
+		this.status = status;
 	}
 
 	protected Booking() {
@@ -39,6 +51,12 @@ public class Booking {
 	private LocalDate checkInDate;
 	
 	private LocalDate checkOutDate;
+	
+	@Enumerated(EnumType.STRING)
+	private BookingStatus status;
+	
+	@CreationTimestamp
+	private Timestamp creationTimestamp;
 
 	public long getId() {
 		return id;
@@ -78,5 +96,17 @@ public class Booking {
 
 	public void setCheckOutDate(LocalDate checkOutDate) {
 		this.checkOutDate = checkOutDate;
+	}
+
+	public BookingStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(BookingStatus status) {
+		this.status = status;
+	}
+
+	public Timestamp getCreationTimestamp() {
+		return creationTimestamp;
 	}
 }
