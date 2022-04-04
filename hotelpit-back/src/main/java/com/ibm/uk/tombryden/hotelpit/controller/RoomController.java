@@ -3,12 +3,14 @@ package com.ibm.uk.tombryden.hotelpit.controller;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -79,6 +81,16 @@ public class RoomController {
 		}
 		
 		return ResponseEntity.ok(getAvailableRoomsBetweenDates(checkIn, checkOut, guests));
+	}
+	
+	@GetMapping("/{roomid}")
+	public ResponseEntity<Object> individualRoomSearch(@PathVariable(value = "roomid") long roomid) {
+		Optional<Room> room = roomRepository.findById(roomid);
+		
+		// if room is not found return 404
+		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Could not find room with ID '" + roomid + "'"));
+		
+		return ResponseEntity.ok(room.get());
 	}
 
 }
