@@ -43,7 +43,7 @@ public class UserController {
 	
 	@PostMapping("/login")
 	public ResponseEntity<Object> login(@RequestBody User user) throws InterruptedException {
-		Thread.sleep(5000);
+		Thread.sleep(1000);
 		
 //		Authentication
 		
