@@ -12,6 +12,9 @@ public class ReservationDTO {
 	
 	@NotNull
 	private String checkOutDate;
+	
+	@NotNull
+	private int totalGuests;
 
 	public long getRoomID() {
 		return roomID;
@@ -35,6 +38,14 @@ public class ReservationDTO {
 
 	public void setCheckOutDate(String checkOutDate) {
 		this.checkOutDate = checkOutDate;
+	}
+
+	public int getTotalGuests() {
+		return totalGuests;
+	}
+
+	public void setTotalGuests(int totalGuests) {
+		this.totalGuests = totalGuests;
 	}
 
 }
