@@ -2,6 +2,7 @@ package com.ibm.uk.tombryden.hotelpit.entity;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -49,6 +50,11 @@ public class Booking {
 	@JoinColumn(name="room_id", nullable = false)
 	private Room room;
 	
+	@ManyToOne
+	@JoinColumn(name="rate_id", nullable = true)
+	// nullable because initially on reservation creation there will be no rate selected
+	private Rate rate;
+	
 	private LocalDate checkInDate;
 	
 	private LocalDate checkOutDate;
@@ -85,6 +91,14 @@ public class Booking {
 		this.room = room;
 	}
 
+	public Rate getRate() {
+		return rate;
+	}
+
+	public void setRate(Rate rate) {
+		this.rate = rate;
+	}
+
 	public LocalDate getCheckInDate() {
 		return checkInDate;
 	}
@@ -99,6 +113,10 @@ public class Booking {
 
 	public void setCheckOutDate(LocalDate checkOutDate) {
 		this.checkOutDate = checkOutDate;
+	}
+	
+	public long getNights() {
+		return ChronoUnit.DAYS.between(checkInDate, checkOutDate);
 	}
 
 	public int getTotalGuests() {

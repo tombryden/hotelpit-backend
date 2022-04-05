@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -45,6 +46,9 @@ public class Rate {
 	
 	@ManyToMany(mappedBy = "rates")
 	private Set<Room> rooms;
+	
+	@OneToMany(mappedBy = "rate")
+	private Set<Booking> bookings;
 
 	public long getId() {
 		return id;
