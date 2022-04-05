@@ -23,13 +23,14 @@ public class Booking {
 		CANCELLED,
 	}
 	
-	public Booking(User user, Room room, LocalDate checkInDate, LocalDate checkOutDate, BookingStatus status) {
+	public Booking(User user, Room room, LocalDate checkInDate, LocalDate checkOutDate, BookingStatus status, int totalGuests) {
 		super();
 		this.user = user;
 		this.room = room;
 		this.checkInDate = checkInDate;
 		this.checkOutDate = checkOutDate;
 		this.status = status;
+		this.totalGuests = totalGuests;
 	}
 
 	protected Booking() {
@@ -51,6 +52,8 @@ public class Booking {
 	private LocalDate checkInDate;
 	
 	private LocalDate checkOutDate;
+	
+	private int totalGuests;
 	
 	@Enumerated(EnumType.STRING)
 	private BookingStatus status;
@@ -96,6 +99,14 @@ public class Booking {
 
 	public void setCheckOutDate(LocalDate checkOutDate) {
 		this.checkOutDate = checkOutDate;
+	}
+
+	public int getTotalGuests() {
+		return totalGuests;
+	}
+
+	public void setTotalGuests(int totalGuests) {
+		this.totalGuests = totalGuests;
 	}
 
 	public BookingStatus getStatus() {
