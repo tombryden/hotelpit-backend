@@ -2,7 +2,9 @@ package com.ibm.uk.tombryden.hotelpit.entity;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -118,6 +120,27 @@ public class Room {
 		this.doubleBeds = doubleBeds;
 	}
 	
+	public Set<Rate> getRates() {
+		Set<Rate> ratesOrderedByMultiplier = new TreeSet<Rate>(new Comparator<Rate>() {
+
+			@Override
+			public int compare(Rate o1, Rate o2) {
+				Float m1 = o1.getMultiplier();
+				Float m2 = o2.getMultiplier();
+				return m2.compareTo(m1);
+			}
+			
+		});
+		
+		ratesOrderedByMultiplier.addAll(rates);
+		
+		return ratesOrderedByMultiplier;
+	}
+
+	public void setRates(Set<Rate> rates) {
+		this.rates = rates;
+	}
+
 	public Set<Booking> getBookings() {
 		return bookings;
 	}
