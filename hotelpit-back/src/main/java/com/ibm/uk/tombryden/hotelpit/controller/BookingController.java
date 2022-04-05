@@ -7,6 +7,8 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,7 +56,7 @@ public class BookingController {
 		// get user from authenciated user
 		AuthenticatedUser authUser = new AuthenticatedUser();
 		
-		Optional<User> user = userRepository.findById(authUser.getUser().getId());
+		Optional<User> user = authUser.getUserFromRepository(userRepository);
 		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
 		
 		// get room from reqeust
@@ -62,17 +64,19 @@ public class BookingController {
 		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Room not found"));
 		
 		//create booking
-		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(paymentDTO.getCheckInDate()), DateUtil.convertURLToDate(paymentDTO.getCheckOutDate()), BookingStatus.CONFIRMED);
+		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(paymentDTO.getCheckInDate()), DateUtil.convertURLToDate(paymentDTO.getCheckOutDate()), BookingStatus.CONFIRMED, 1);
 		
 		return ResponseEntity.ok(bookingRepository.save(booking));
 	}
 	
 	@PostMapping("/reserve")
-	public ResponseEntity<Object> createReservation(@Valid @RequestBody ReservationDTO reservationDTO) {
+	public ResponseEntity<Object> createReservation(@Valid @RequestBody ReservationDTO reservationDTO) throws InterruptedException {
+		Thread.sleep(5000);
+		
 		// get user from authenciated user
 		AuthenticatedUser authUser = new AuthenticatedUser();
 		
-		Optional<User> user = userRepository.findById(authUser.getUser().getId());
+		Optional<User> user = authUser.getUserFromRepository(userRepository);
 		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
 		
 		// get room from reqeust
@@ -80,9 +84,28 @@ public class BookingController {
 		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Room not found"));
 		
 		// create booking
-		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(reservationDTO.getCheckInDate()), DateUtil.convertURLToDate(reservationDTO.getCheckOutDate()), BookingStatus.RESERVATION);
+		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(reservationDTO.getCheckInDate()), DateUtil.convertURLToDate(reservationDTO.getCheckOutDate()), BookingStatus.RESERVATION, reservationDTO.getTotalGuests());
 		
 		return ResponseEntity.ok(bookingRepository.save(booking));
 	}
-
+	
+	@GetMapping("/{bookingid}")
+	public ResponseEntity<Object> getBooking(@PathVariable long bookingid) {
+		// get authenticated user, get booking, check if booking is owned by current user, return booking
+		AuthenticatedUser authUser = new AuthenticatedUser();
+		Optional<User> user = authUser.getUserFromRepository(userRepository);
+		
+		// check if user isnt found, if so return 404 (should never occur)
+		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
+		
+		// get booking
+		Optional<Booking> booking = bookingRepository.findById(bookingid);
+		if(booking.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Booking not found"));
+		
+		// check if booking is owned by authorised user
+		if(!user.get().equals(booking.get().getUser())) return ResponseEntity.status(403).body(new TextResponse("The current booking is not owned by the authorised user"));
+		
+		return ResponseEntity.ok(booking.get());
+		
+	}
 }
