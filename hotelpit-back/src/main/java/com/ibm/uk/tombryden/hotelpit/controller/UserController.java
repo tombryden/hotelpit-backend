@@ -1,6 +1,8 @@
 package com.ibm.uk.tombryden.hotelpit.controller;
 
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,8 +18,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ibm.uk.tombryden.hotelpit.entity.Booking;
+import com.ibm.uk.tombryden.hotelpit.entity.Booking.BookingStatus;
 import com.ibm.uk.tombryden.hotelpit.entity.User;
 import com.ibm.uk.tombryden.hotelpit.repository.UserRepository;
+import com.ibm.uk.tombryden.hotelpit.security.AuthenticatedUser;
 import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
 
 @RestController
@@ -70,6 +75,26 @@ public class UserController {
 	@GetMapping("/auth")
 	public ResponseEntity<Object> authenticated() {
 		return ResponseEntity.ok().build();
+	}
+	
+	@GetMapping("/reservation")
+	public ResponseEntity<Object> getReservationIfExists() {
+		// get authenticated user, get all bookings, check if any have reservation status, return first one as user can only have one reservation
+		AuthenticatedUser authUser = new AuthenticatedUser();
+		Optional<User> user = authUser.getUserFromRepository(userRepository);
+		
+		// check if user isnt found, if so return 404 (should never occur)
+		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
+		
+		// loop through bookings.. check if any have reservation status.. if so, return this booking obj
+		for(Booking booking : user.get().getBookings()) {
+			if(booking.getStatus().equals(BookingStatus.RESERVATION)) {
+				return ResponseEntity.ok(booking);
+			}
+		}
+		
+		// if no reservation found return 404
+		return ResponseEntity.status(404).body(new TextResponse("User has no booking reservation"));
 	}
 
 }
