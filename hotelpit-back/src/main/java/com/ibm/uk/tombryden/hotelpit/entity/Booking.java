@@ -1,7 +1,7 @@
 package com.ibm.uk.tombryden.hotelpit.entity;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 import javax.persistence.Entity;
@@ -65,7 +65,7 @@ public class Booking {
 	private BookingStatus status;
 	
 	@CreationTimestamp
-	private Timestamp creationTimestamp;
+	private LocalDateTime creationTimestamp;
 
 	public long getId() {
 		return id;
@@ -135,7 +135,7 @@ public class Booking {
 		this.status = status;
 	}
 
-	public Timestamp getCreationTimestamp() {
+	public LocalDateTime getCreationTimestamp() {
 		return creationTimestamp;
 	}
 }
