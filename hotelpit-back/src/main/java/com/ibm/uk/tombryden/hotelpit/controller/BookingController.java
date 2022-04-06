@@ -1,6 +1,7 @@
 package com.ibm.uk.tombryden.hotelpit.controller;
 
 import java.util.Optional;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -110,7 +111,14 @@ public class BookingController {
 		Optional<Room> room = roomRepository.findById(reservationDTO.getRoomID());
 		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Room not found"));
 		
-		// create booking
+		// check if user has any ongoing reservations
+		Set<Booking> currentUserReservations = bookingRepository.findByStatusAndUser(BookingStatus.RESERVATION, user.get());
+		if(currentUserReservations.size() > 0) {
+			// reservation(s) exist, remove them
+			bookingRepository.deleteAll(currentUserReservations);
+		}
+		
+		// create new booking reservation
 		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(reservationDTO.getCheckInDate()), DateUtil.convertURLToDate(reservationDTO.getCheckOutDate()), BookingStatus.RESERVATION, reservationDTO.getTotalGuests());
 		
 		return ResponseEntity.ok(bookingRepository.save(booking));
