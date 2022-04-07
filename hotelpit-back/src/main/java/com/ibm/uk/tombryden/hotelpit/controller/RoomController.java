@@ -15,8 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ibm.uk.tombryden.hotelpit.entity.Booking;
 import com.ibm.uk.tombryden.hotelpit.entity.Room;
+import com.ibm.uk.tombryden.hotelpit.entity.User;
+import com.ibm.uk.tombryden.hotelpit.entity.Booking.BookingStatus;
+import com.ibm.uk.tombryden.hotelpit.repository.BookingRepository;
 import com.ibm.uk.tombryden.hotelpit.repository.RoomRepository;
+import com.ibm.uk.tombryden.hotelpit.repository.UserRepository;
+import com.ibm.uk.tombryden.hotelpit.security.AuthenticatedUser;
 import com.ibm.uk.tombryden.hotelpit.util.DateUtil;
 import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
 
@@ -27,6 +33,12 @@ public class RoomController {
 	
 	@Autowired
 	private RoomRepository roomRepository;
+	
+	@Autowired
+	private BookingRepository bookingRepository;
+	
+	@Autowired
+	private UserRepository userRepository;
 	
 	// FUNCTIONS - NOT MAPPINGS
 	private Set<Room> getAllRoomsWithGuests(int guests) {
@@ -46,15 +58,28 @@ public class RoomController {
 		return roomsWithGuests;
 	}
 	
-	private Set<Room> getAvailableRoomsBetweenDates(LocalDate checkIn, LocalDate checkOut, int guests) {
+	private Set<Room> getAvailableRoomsBetweenDates(LocalDate checkIn, LocalDate checkOut, int guests, User user) {
 		// get all available rooms with specified number of guests
 		Set<Room> availableRooms = getAllRoomsWithGuests(guests);
 		
 		// loop through rooms.. check if date any bookings for the room within the specified dates
-		Set<Room> roomsBookedBetweenDates = roomRepository.findBookedRoomsBetweenDates(checkIn, checkIn.plusDays(1), checkOut, checkOut.minusDays(1));
+		Set<Booking> bookingsBookedBetweenDates = bookingRepository.findBookedRoomsBetweenDates(checkIn, checkIn.plusDays(1), checkOut, checkOut.minusDays(1));
+		
+		// remove any rooms that are reserved by current user - want users to be able to search for similar dates, and begin the reservation process again 
+		if(user != null) {
+			for(Booking booking : bookingsBookedBetweenDates) {
+				// if booking is owned by current user and the booking is a reservation.. show this in the search
+				if(booking.getUser().equals(user) && booking.getStatus().equals(BookingStatus.RESERVATION)) {
+					bookingsBookedBetweenDates.remove(booking);
+				}
+			}
+		}
+		
+		Set<Room> bookedRooms = new HashSet<Room>();
+		bookingsBookedBetweenDates.forEach(b -> bookedRooms.add(b.getRoom()));
 		
 		// remove all booked rooms from available rooms
-		availableRooms.removeAll(roomsBookedBetweenDates);
+		availableRooms.removeAll(bookedRooms);
 		
 		return availableRooms;
 	}
@@ -80,7 +105,11 @@ public class RoomController {
 			return ResponseEntity.badRequest().body(new TextResponse("Failed to parse check out date '" + checkout + "'. Format must be yyyyMMdd"));
 		}
 		
-		return ResponseEntity.ok(getAvailableRoomsBetweenDates(checkIn, checkOut, guests));
+		// get if there is currently a logged in user
+		AuthenticatedUser authUser = new AuthenticatedUser();
+		Optional<User> user = authUser.getUserFromRepository(userRepository);
+		
+		return ResponseEntity.ok(getAvailableRoomsBetweenDates(checkIn, checkOut, guests, user.isEmpty() ? null : user.get()));
 	}
 	
 	@GetMapping("/{roomid}")

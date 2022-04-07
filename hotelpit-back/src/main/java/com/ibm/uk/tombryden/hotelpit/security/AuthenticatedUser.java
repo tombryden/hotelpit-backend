@@ -30,6 +30,7 @@ public class AuthenticatedUser {
 	}
 	
 	public Optional<User> getUserFromRepository(UserRepository userRepository) {
+		if(user == null) return Optional.empty();
 		return userRepository.findById(user.getId());
 	}
 	
