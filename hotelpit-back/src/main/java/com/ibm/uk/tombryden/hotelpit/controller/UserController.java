@@ -1,6 +1,10 @@
 package com.ibm.uk.tombryden.hotelpit.controller;
 
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,6 +99,31 @@ public class UserController {
 		
 		// if no reservation found return 404
 		return ResponseEntity.status(404).body(new TextResponse("User has no booking reservation"));
+	}
+	
+	@GetMapping("/bookings")
+	public ResponseEntity<Object> getAllUserBookings() {
+		// get authenticated user, get all bookings, check if any have reservation status, return first one as user can only have one reservation
+		AuthenticatedUser authUser = new AuthenticatedUser();
+		Optional<User> user = authUser.getUserFromRepository(userRepository);
+		
+		// check if user isnt found, if so return 404 (should never occur)
+		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
+		
+		// get all bookings in order of check in date
+		// list because comparitor will often be duplicate (can be same check in date between rooms)
+		List<Booking> bookings = new ArrayList<Booking>();
+		bookings.addAll(user.get().getBookings());
+		
+		Collections.sort(bookings, new Comparator<Booking>() {
+
+			@Override
+			public int compare(Booking b1, Booking b2) {
+				return b2.getCheckInDate().compareTo(b1.getCheckInDate());
+			}
+		});
+		
+		return ResponseEntity.ok(bookings);
 	}
 
 }
