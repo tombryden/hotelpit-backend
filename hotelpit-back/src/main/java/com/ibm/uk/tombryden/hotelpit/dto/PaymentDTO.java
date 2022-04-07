@@ -14,13 +14,7 @@ public class PaymentDTO {
 	private String expYear;
 	
 	@NotNull
-	private long roomID;
-	
-	@NotNull
-	private String checkInDate;
-	
-	@NotNull
-	private String checkOutDate;
+	private long bookingID;
 
 	public String getCardNumber() {
 		return cardNumber;
@@ -46,28 +40,12 @@ public class PaymentDTO {
 		this.expYear = expYear;
 	}
 
-	public long getRoomID() {
-		return roomID;
+	public long getBookingID() {
+		return bookingID;
 	}
 
-	public void setRoomID(long roomID) {
-		this.roomID = roomID;
-	}
-
-	public String getCheckInDate() {
-		return checkInDate;
-	}
-
-	public void setCheckInDate(String checkInDate) {
-		this.checkInDate = checkInDate;
-	}
-
-	public String getCheckOutDate() {
-		return checkOutDate;
-	}
-
-	public void setCheckOutDate(String checkOutDate) {
-		this.checkOutDate = checkOutDate;
+	public void setBookingID(long bookingID) {
+		this.bookingID = bookingID;
 	}
 
 }

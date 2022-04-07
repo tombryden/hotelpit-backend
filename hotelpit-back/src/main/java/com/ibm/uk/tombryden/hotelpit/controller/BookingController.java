@@ -70,7 +70,9 @@ public class BookingController {
 	
 	// MAPPINGS
 	@PostMapping("/pay")
-	public ResponseEntity<Object> payAndCreateBooking(@Valid @RequestBody PaymentDTO paymentDTO) {
+	public ResponseEntity<Object> payAndConfirmBooking(@Valid @RequestBody PaymentDTO paymentDTO) throws InterruptedException {
+		Thread.sleep(3000);
+		
 		// if card doesnt start with 4242 decline card number
 		if(!paymentDTO.getCardNumber().startsWith("4242")) return ResponseEntity.status(400).body(new TextResponse("Payment rejected"));
 		
@@ -87,14 +89,20 @@ public class BookingController {
 		Optional<User> user = authUser.getUserFromRepository(userRepository);
 		if(user.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("User not found"));
 		
-		// get room from reqeust
-		Optional<Room> room = roomRepository.findById(paymentDTO.getRoomID());
-		if(room.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Room not found"));
+		// get current booking reservation
+		Optional<Booking> reservation = bookingRepository.findById(paymentDTO.getBookingID());
+		if(reservation.isEmpty()) return ResponseEntity.status(404).body(new TextResponse("Booking not found"));
 		
-		//create booking
-		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(paymentDTO.getCheckInDate()), DateUtil.convertURLToDate(paymentDTO.getCheckOutDate()), BookingStatus.CONFIRMED, 1);
+		// check if reservation is owned by the user trying to pay
+		if(!reservation.get().getUser().equals(user.get())) return ResponseEntity.status(403).body(new TextResponse("Booking is not owned by the logged in user"));
 		
-		return ResponseEntity.ok(bookingRepository.save(booking));
+		// check if booking is in reservation status
+		if(!reservation.get().getStatus().equals(BookingStatus.RESERVATION)) return ResponseEntity.status(400).body(new TextResponse("Booking ID provided is not in 'RESERVATION' status"));
+		
+		//booking paid.. change booking status to CONFIRMED
+		reservation.get().setStatus(BookingStatus.CONFIRMED);
+		
+		return ResponseEntity.ok(bookingRepository.save(reservation.get()));
 	}
 	
 	@PostMapping("/reserve")
