@@ -1,5 +1,7 @@
 package com.ibm.uk.tombryden.hotelpit.entity;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -137,5 +139,19 @@ public class Booking {
 
 	public LocalDateTime getCreationTimestamp() {
 		return creationTimestamp;
+	}
+	
+	public String getTotalPrice() {
+		// if booking has confirmed status then calculate the price.. if not return null as no price can be calculated
+		if(!this.getStatus().equals(BookingStatus.CONFIRMED)) return null;
+		
+		float totalPrice = Float.valueOf(room.getBasePrice()) * rate.getMultiplier();
+		
+		// convert to 2 dp
+		BigDecimal bd = new BigDecimal(totalPrice);
+		
+		bd = bd.setScale(2, RoundingMode.HALF_UP);
+		
+		return bd.toString();
 	}
 }
