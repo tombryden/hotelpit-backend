@@ -142,8 +142,8 @@ public class Booking {
 	}
 	
 	public String getTotalPrice() {
-		// if booking has confirmed status then calculate the price.. if not return null as no price can be calculated
-		if(!this.getStatus().equals(BookingStatus.CONFIRMED)) return null;
+		// if booking has rate confirmed then calculate the price.. if not return null as no price can be calculated
+		if(this.getRate() == null) return null;
 		
 		float totalPrice = Float.valueOf(room.getBasePrice()) * rate.getMultiplier();
 		
