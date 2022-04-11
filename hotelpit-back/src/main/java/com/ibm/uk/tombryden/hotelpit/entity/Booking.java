@@ -145,7 +145,9 @@ public class Booking {
 		// if booking has rate confirmed then calculate the price.. if not return null as no price can be calculated
 		if(this.getRate() == null) return null;
 		
-		float totalPrice = Float.valueOf(room.getBasePrice()) * rate.getMultiplier();
+		float totalPricePerNight = Float.valueOf(room.getBasePrice()) * rate.getMultiplier();
+		
+		float totalPrice = totalPricePerNight * this.getNights();
 		
 		// convert to 2 dp
 		BigDecimal bd = new BigDecimal(totalPrice);

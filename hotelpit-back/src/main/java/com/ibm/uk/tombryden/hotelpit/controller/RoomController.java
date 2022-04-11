@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,16 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.ibm.uk.tombryden.hotelpit.entity.Booking;
+import com.ibm.uk.tombryden.hotelpit.entity.Booking.BookingStatus;
 import com.ibm.uk.tombryden.hotelpit.entity.Room;
 import com.ibm.uk.tombryden.hotelpit.entity.User;
-import com.ibm.uk.tombryden.hotelpit.entity.Booking.BookingStatus;
 import com.ibm.uk.tombryden.hotelpit.repository.BookingRepository;
 import com.ibm.uk.tombryden.hotelpit.repository.RoomRepository;
 import com.ibm.uk.tombryden.hotelpit.repository.UserRepository;
 import com.ibm.uk.tombryden.hotelpit.security.AuthenticatedUser;
-import com.ibm.uk.tombryden.hotelpit.util.DateUtil;
+import com.ibm.uk.tombryden.hotelpit.util.DefectCookieParser;
 import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
+import com.ibm.uk.tombryden.hotelpit.util.Utils;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
@@ -88,19 +92,23 @@ public class RoomController {
 	
 	// MAPPINGS
 	@GetMapping
-	public ResponseEntity<Object> roomSearch(@RequestParam String checkin, @RequestParam String checkout, @RequestParam int guests) {
+	public ResponseEntity<Object> roomSearch(@RequestParam String checkin, @RequestParam String checkout, @RequestParam int guests, @CookieValue(name = "defects", required = false) String jsonDefectsArr) throws JsonMappingException, JsonProcessingException, InterruptedException {
+		// get defect cookies..
+		DefectCookieParser dcp = new DefectCookieParser(jsonDefectsArr);
 		
-		// parse string date sent in params - try catch to give 400 status instead of 500
+		// generate random number between 10-20 secs
+		if(dcp.getDefectCookies().contains("Rooms_TooLong")) Thread.sleep(Utils.getRandomNumber(10, 20) * 1000);
+		
 		LocalDate checkIn;
 		try {
-			checkIn = DateUtil.convertURLToDate(checkin);
+			checkIn = Utils.convertURLToDate(checkin);
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body(new TextResponse("Failed to parse check in date '" + checkin + "'. Format must be yyyyMMdd"));
 		}
 		
 		LocalDate checkOut;
 		try {
-			checkOut = DateUtil.convertURLToDate(checkout);
+			checkOut = Utils.convertURLToDate(checkout);
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body(new TextResponse("Failed to parse check out date '" + checkout + "'. Format must be yyyyMMdd"));
 		}

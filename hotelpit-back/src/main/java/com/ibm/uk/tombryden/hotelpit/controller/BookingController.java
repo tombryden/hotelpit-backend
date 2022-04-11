@@ -7,6 +7,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.ibm.uk.tombryden.hotelpit.dto.PaymentDTO;
 import com.ibm.uk.tombryden.hotelpit.dto.ReservationDTO;
 import com.ibm.uk.tombryden.hotelpit.entity.Booking;
@@ -29,7 +32,8 @@ import com.ibm.uk.tombryden.hotelpit.repository.RateRepository;
 import com.ibm.uk.tombryden.hotelpit.repository.RoomRepository;
 import com.ibm.uk.tombryden.hotelpit.repository.UserRepository;
 import com.ibm.uk.tombryden.hotelpit.security.AuthenticatedUser;
-import com.ibm.uk.tombryden.hotelpit.util.DateUtil;
+import com.ibm.uk.tombryden.hotelpit.util.Utils;
+import com.ibm.uk.tombryden.hotelpit.util.DefectCookieParser;
 import com.ibm.uk.tombryden.hotelpit.util.TextResponse;
 
 @RestController
@@ -70,8 +74,10 @@ public class BookingController {
 	
 	// MAPPINGS
 	@PostMapping("/pay")
-	public ResponseEntity<Object> payAndConfirmBooking(@Valid @RequestBody PaymentDTO paymentDTO) throws InterruptedException {
-		Thread.sleep(3000);
+	public ResponseEntity<Object> payAndConfirmBooking(@Valid @RequestBody PaymentDTO paymentDTO, @CookieValue(name = "defects", required = false) String defectsJsonArr) throws InterruptedException, JsonMappingException, JsonProcessingException {
+		// defects
+		DefectCookieParser dcp = new DefectCookieParser(defectsJsonArr);
+		if(dcp.getDefectCookies().contains("Payment_PayTooLong")) Thread.sleep(Utils.getRandomNumber(10, 20) * 1000);
 		
 		// if card doesnt start with 4242 decline card number
 		if(!paymentDTO.getCardNumber().startsWith("4242")) return ResponseEntity.status(400).body(new TextResponse("Payment rejected"));
@@ -106,8 +112,13 @@ public class BookingController {
 	}
 	
 	@PostMapping("/reserve")
-	public ResponseEntity<Object> createReservation(@Valid @RequestBody ReservationDTO reservationDTO) throws InterruptedException {
-		Thread.sleep(5000);
+	public ResponseEntity<Object> createReservation(@Valid @RequestBody ReservationDTO reservationDTO, @CookieValue(name = "defects", required = false) String defectsArrJson) throws InterruptedException, JsonMappingException, JsonProcessingException {
+		// parse defects cookie
+		DefectCookieParser dcp = new DefectCookieParser(defectsArrJson);
+		
+		if(dcp.getDefectCookies().contains("Rooms_ReservationTooLong")) Thread.sleep(Utils.getRandomNumber(10, 20) * 1000);
+		
+		if(dcp.getDefectCookies().contains("Rooms_ReservationInternalError")) return ResponseEntity.status(500).build();
 		
 		// get user from authenciated user
 		AuthenticatedUser authUser = new AuthenticatedUser();
@@ -127,13 +138,13 @@ public class BookingController {
 		}
 		
 		// create new booking reservation
-		Booking booking = new Booking(user.get(), room.get(), DateUtil.convertURLToDate(reservationDTO.getCheckInDate()), DateUtil.convertURLToDate(reservationDTO.getCheckOutDate()), BookingStatus.RESERVATION, reservationDTO.getTotalGuests());
+		Booking booking = new Booking(user.get(), room.get(), Utils.convertURLToDate(reservationDTO.getCheckInDate()), Utils.convertURLToDate(reservationDTO.getCheckOutDate()), BookingStatus.RESERVATION, reservationDTO.getTotalGuests());
 		
 		return ResponseEntity.ok(bookingRepository.save(booking));
 	}
 	
 	@GetMapping("/{bookingid}")
-	public ResponseEntity<Object> getBooking(@PathVariable long bookingid) {
+	public ResponseEntity<Object> getBooking(@PathVariable long bookingid, @CookieValue(name = "defects", required = false) String defectsJsonArr) throws JsonMappingException, JsonProcessingException {
 		// get authenticated user, get booking, check if booking is owned by current user, return booking
 		AuthenticatedUser authUser = new AuthenticatedUser();
 		Optional<User> user = authUser.getUserFromRepository(userRepository);
@@ -148,12 +159,37 @@ public class BookingController {
 		// check if booking is owned by authorised user
 		if(!user.get().equals(booking.get().getUser())) return ResponseEntity.status(403).body(new TextResponse("The current booking is not owned by the authorised user"));
 		
+		// DEFECTS
+		DefectCookieParser dcp = new DefectCookieParser(defectsJsonArr);
+		// create new booking object with same info as found booking (want to update fields without it being saved automatically)
+		Booking currBooking = booking.get();
+		Booking fakeBooking = new Booking(currBooking.getUser(), currBooking.getRoom(), currBooking.getCheckInDate(), currBooking.getCheckOutDate(), currBooking.getStatus(), currBooking.getTotalGuests());
+		
+		if(dcp.getDefectCookies().contains("Rates_DatesIncorrect")) {
+			fakeBooking.setCheckInDate(fakeBooking.getCheckInDate().plusDays(Utils.getRandomNumber(2, 10)));
+			fakeBooking.setCheckOutDate(fakeBooking.getCheckInDate().plusDays(Utils.getRandomNumber(4, 12)));
+			
+			// if cookies doesnt contain payment rate defect then return.. if it does, mess with data for incorrect rate defect
+			if(!dcp.getDefectCookies().contains("Payment_IncorrectRate")) return ResponseEntity.ok(fakeBooking);
+		}
+		
+		if(dcp.getDefectCookies().contains("Payment_IncorrectRate")) {
+			fakeBooking.setRate(new Rate("Business", 1.6F, "For business visitors only"));
+			
+			return ResponseEntity.ok(fakeBooking);
+		}
+		
+		
+		
+		
 		return ResponseEntity.ok(booking.get());
 	}
 	
 	@PatchMapping("/{bookingid}/rate")
-	public ResponseEntity<Object> addRateToBooking(@PathVariable long bookingid, @RequestParam long rateid) throws InterruptedException {
-		Thread.sleep(5000);
+	public ResponseEntity<Object> addRateToBooking(@PathVariable long bookingid, @RequestParam long rateid, @CookieValue(name = "defects", required = false) String jsonDefectsArr) throws InterruptedException, JsonMappingException, JsonProcessingException {
+		// get defects
+		DefectCookieParser dcp = new DefectCookieParser(jsonDefectsArr);
+		if(dcp.getDefectCookies().contains("Rates_SelectTooLong")) Thread.sleep(Utils.getRandomNumber(10, 20) * 1000);
 		
 		// get booking from id
 		Optional<Booking> booking = bookingRepository.findById(bookingid);

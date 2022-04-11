@@ -17,9 +17,8 @@ import javax.validation.constraints.Size;
 @Entity
 public class Rate {
 	
-	public Rate(long id, @NotNull @Size(max = 30) String name, @NotNull float multiplier, @NotNull String description) {
+	public Rate(@NotNull @Size(max = 30) String name, @NotNull float multiplier, @NotNull String description) {
 		super();
-		this.id = id;
 		this.name = name;
 		this.description = description;
 		this.multiplier = multiplier;

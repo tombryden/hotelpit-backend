@@ -16,7 +16,7 @@ public class Defect {
 	}
 	
 	public enum DefectPage {
-		HOME,
+		HOME, ROOMS, RATES, PAYMENT,
 	}
 	
 	protected Defect() {
