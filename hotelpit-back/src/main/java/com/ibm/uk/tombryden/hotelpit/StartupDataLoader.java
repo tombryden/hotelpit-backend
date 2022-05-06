@@ -1,5 +1,8 @@
 package com.ibm.uk.tombryden.hotelpit;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -8,13 +11,23 @@ import org.springframework.stereotype.Component;
 import com.ibm.uk.tombryden.hotelpit.entity.Defect;
 import com.ibm.uk.tombryden.hotelpit.entity.Defect.DefectCategory;
 import com.ibm.uk.tombryden.hotelpit.entity.Defect.DefectPage;
+import com.ibm.uk.tombryden.hotelpit.entity.Rate;
+import com.ibm.uk.tombryden.hotelpit.entity.Room;
 import com.ibm.uk.tombryden.hotelpit.repository.DefectRepository;
+import com.ibm.uk.tombryden.hotelpit.repository.RateRepository;
+import com.ibm.uk.tombryden.hotelpit.repository.RoomRepository;
 
 @Component
 public class StartupDataLoader implements ApplicationRunner {
 	
 	@Autowired
 	private DefectRepository defectRepository;
+	
+	@Autowired
+	private RoomRepository roomRepository;
+	
+	@Autowired
+	private RateRepository rateRepository;
 	
 
 	@Override
@@ -118,6 +131,31 @@ public class StartupDataLoader implements ApplicationRunner {
 				DefectCategory.NONFUNCTIONAL, 
 				DefectPage.PAYMENT,
 				"Payment_PayTooLong"));
+		
+		
+		//generate standard rates and rooms if non exist
+		if(rateRepository.findAll().size() == 0) {
+			Set<Rate> rates = new HashSet<Rate>();
+			
+			Rate flexPlus = new Rate("Flexible Plus", 1.2F, "Cancel up to one day before check in");
+			Rate saver = new Rate("Saver", 1.1F, "Free cancellation up to 7 days before check in");
+			Rate saverEx = new Rate("Saver Extreme", 1.0F, "No cancellation available");
+			
+			rateRepository.save(flexPlus);
+			
+			rateRepository.save(saver);
+			
+			rateRepository.save(saverEx);
+			
+			rates.add(flexPlus);
+			rates.add(saver);
+			rates.add(saverEx);
+			
+			// rooms
+			roomRepository.save(new Room("The Deluxe Suite", "The most expensive room", 100, 0, 1, rates));
+			
+			roomRepository.save(new Room("Standard Room", "A basic room", 80, 2, 0, rates));
+		}
 	}
 
 }

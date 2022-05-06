@@ -27,14 +27,15 @@ public class Room {
 		
 	}
 	
-	public Room(long id, @NotNull @Size(max = 30) String name, @NotNull String description, @NotNull float basePrice, int singleBeds, int doubleBeds) {
+	public Room(@NotNull @Size(max = 30) String name, @NotNull String description, @NotNull float basePrice, int singleBeds, int doubleBeds, Set<Rate> rates) {
 		super();
-		this.id = id;
 		this.name = name;
 		this.description = description;
 		this.basePrice = basePrice;
 		this.singleBeds = singleBeds;
 		this.doubleBeds = doubleBeds;
+		this.rates = rates;
+		
 	}
 
 	@Id
